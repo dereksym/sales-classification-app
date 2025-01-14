@@ -14,51 +14,51 @@ const SalesClassification = () => {
   const [error, setError] = useState(null);
   const [fileName, setFileName] = useState("");
 
-  const analyzeExcelData = async (excelData) => {
+  const analyzeExcelData = async (excelData: Uint8Array) => {
     try {
       const workbook = XLSX.read(excelData, {
         cellStyles: true,
         cellDates: true,
         cellNF: true,
       });
-
+  
       const firstSheet = workbook.Sheets[workbook.SheetNames[0]];
       const jsonData = XLSX.utils.sheet_to_json(firstSheet);
-
+  
       // Calculate total sales by practice
-      const salesByPractice = {};
-      jsonData.forEach(row => {
+      const salesByPractice: { [key: string]: number } = {};
+      jsonData.forEach((row: any) => {
         const practice = row.Practice;
         const sales = parseFloat(row.Sales || 0);
         if (practice) {
           salesByPractice[practice] = (salesByPractice[practice] || 0) + sales;
         }
       });
-
+  
       // Sort practices by sales
       const sortedPractices = Object.entries(salesByPractice)
-        .sort(([,a], [,b]) => b - a);
-
+        .sort(([, a], [, b]) => b - a);
+  
       const totalPractices = sortedPractices.length;
       const sClassCutoff = Math.floor(totalPractices * 0.1);
       const aClassCutoff = Math.floor(totalPractices * 0.3);
       const bClassCutoff = Math.floor(totalPractices * 0.6);
-
+  
       // Classify practices
       const classification = {
-        S: [],
-        A: [],
-        B: [],
-        C: []
+        S: [] as { practice: string; sales: number; rank: number }[],
+        A: [] as { practice: string; sales: number; rank: number }[],
+        B: [] as { practice: string; sales: number; rank: number }[],
+        C: [] as { practice: string; sales: number; rank: number }[],
       };
-
+  
       sortedPractices.forEach(([practice, sales], index) => {
         const entry = {
           practice,
           sales: parseFloat(sales.toFixed(2)),
-          rank: index + 1
+          rank: index + 1,
         };
-
+  
         if (index < sClassCutoff) {
           classification.S.push(entry);
         } else if (index < aClassCutoff) {
@@ -69,7 +69,7 @@ const SalesClassification = () => {
           classification.C.push(entry);
         }
       });
-
+  
       setClassificationData(classification);
       setError(null);
     } catch (error) {
@@ -79,7 +79,7 @@ const SalesClassification = () => {
       setLoading(false);
     }
   };
-
+  
   useEffect(() => {
     const loadInitialData = async () => {
       try {
